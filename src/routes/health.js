@@ -1,6 +1,6 @@
 const express = require("express");
 const { getDb } = require("../db");
-const { calculateScore, getRiskLevel } = require("../services/healthScore");
+const { calculateScore, getRiskLevel, sanitizeMetrics } = require("../services/healthScore");
 
 const router = express.Router();
 
@@ -19,6 +19,7 @@ router.post("/calculate/:customerId", (req, res) => {
     return res.status(400).json({ error: "no metrics found for this customer" });
   }
 
+  const cleanedMetrics = sanitizeMetrics(latestMetric);
   const score = calculateScore(latestMetric);
   const riskLevel = getRiskLevel(score);
 
@@ -36,6 +37,13 @@ router.post("/calculate/:customerId", (req, res) => {
     score,
     risk_level: riskLevel,
     metrics_used: {
+      login_frequency: cleanedMetrics.login_frequency,
+      feature_adoption: cleanedMetrics.feature_adoption,
+      support_ticket_count: cleanedMetrics.support_ticket_count,
+      nps_score: cleanedMetrics.nps_score,
+      usage_time_minutes: cleanedMetrics.usage_time_minutes,
+    },
+    raw_metrics: {
       login_frequency: latestMetric.login_frequency,
       feature_adoption: latestMetric.feature_adoption,
       support_ticket_count: latestMetric.support_ticket_count,
@@ -73,10 +81,16 @@ router.post("/calculate-all", (req, res) => {
   const results = [];
   const transaction = db.transaction(() => {
     for (const row of customers) {
+      const cleaned = sanitizeMetrics(row);
       const score = calculateScore(row);
       const riskLevel = getRiskLevel(score);
       upsert.run(row.customer_id, score, riskLevel);
-      results.push({ customer_id: row.customer_id, score, risk_level: riskLevel });
+      results.push({
+        customer_id: row.customer_id,
+        score,
+        risk_level: riskLevel,
+        sanitized: cleaned,
+      });
     }
   });
   transaction();

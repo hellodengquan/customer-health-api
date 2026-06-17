@@ -2,14 +2,43 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
-function calculateScore(metrics) {
+function sanitizeMetrics(metrics) {
   const {
-    login_frequency = 0,
-    feature_adoption = 0,
-    support_ticket_count = 0,
-    nps_score = null,
-    usage_time_minutes = 0,
-  } = metrics;
+    login_frequency,
+    feature_adoption,
+    support_ticket_count,
+    nps_score,
+    usage_time_minutes,
+  } = metrics || {};
+
+  const safeNumber = (v, fallback) => {
+    if (typeof v === "number" && !Number.isNaN(v) && Number.isFinite(v)) return v;
+    return fallback;
+  };
+
+  const safeInt = (v, fallback) => {
+    const n = safeNumber(v, fallback);
+    return Math.max(0, Math.floor(n));
+  };
+
+  return {
+    login_frequency: clamp(safeNumber(login_frequency, 0), 0, 60),
+    feature_adoption: clamp(safeNumber(feature_adoption, 0), 0, 100),
+    support_ticket_count: safeInt(support_ticket_count, 0),
+    nps_score: nps_score != null ? clamp(safeNumber(nps_score, 0), -100, 100) : null,
+    usage_time_minutes: clamp(safeNumber(usage_time_minutes, 0), 0, 3000),
+  };
+}
+
+function calculateScore(metrics) {
+  const cleaned = sanitizeMetrics(metrics);
+  const {
+    login_frequency,
+    feature_adoption,
+    support_ticket_count,
+    nps_score,
+    usage_time_minutes,
+  } = cleaned;
 
   const loginScore = clamp(login_frequency / 30, 0, 1) * 25;
 
@@ -33,4 +62,4 @@ function getRiskLevel(score) {
   return "high_risk";
 }
 
-module.exports = { calculateScore, getRiskLevel };
+module.exports = { calculateScore, getRiskLevel, sanitizeMetrics };

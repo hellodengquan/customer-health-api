@@ -12,8 +12,8 @@ function validateMetrics(data) {
 
   if (data.login_frequency == null) {
     errors.push("login_frequency is required");
-  } else if (!isNumber(data.login_frequency) || data.login_frequency < 0) {
-    errors.push("login_frequency must be a non-negative number (≥ 0)");
+  } else if (!isNumber(data.login_frequency) || data.login_frequency < 0 || data.login_frequency > 60) {
+    errors.push("login_frequency must be a number between 0 and 60 (times per month)");
   } else {
     result.login_frequency = data.login_frequency;
   }
@@ -47,8 +47,8 @@ function validateMetrics(data) {
   }
 
   if (data.usage_time_minutes != null) {
-    if (!isNumber(data.usage_time_minutes) || data.usage_time_minutes < 0) {
-      errors.push("usage_time_minutes must be a non-negative number (≥ 0)");
+    if (!isNumber(data.usage_time_minutes) || data.usage_time_minutes < 0 || data.usage_time_minutes > 3000) {
+      errors.push("usage_time_minutes must be a number between 0 and 3000 (minutes per month)");
     } else {
       result.usage_time_minutes = data.usage_time_minutes;
     }
