@@ -58,6 +58,14 @@ function initTables() {
       FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
     );
   `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS migration_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      applied_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
 }
 
 module.exports = { getDb, initTables };
