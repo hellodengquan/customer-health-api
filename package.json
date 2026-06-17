@@ -5,7 +5,8 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "init-db": "node src/db/init.js"
+    "init-db": "node src/db/init.js",
+    "migrate-metrics": "node src/db/migrateMetrics.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
